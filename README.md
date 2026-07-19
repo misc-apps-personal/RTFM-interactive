@@ -20,6 +20,7 @@ alias rtfm='cd ~/Documents/vibecoding/RTFM-interactive && source .venv/bin/activ
 | Key | Action |
 | --- | ------ |
 | `n` | Next section |
+| `p` | Previous section |
 | `z` | Start/exit quiz on current section |
 | `a` `b` `c` `d` | Answer quiz question |
 | `q` | Quit |

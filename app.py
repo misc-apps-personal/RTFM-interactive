@@ -53,6 +53,7 @@ class RTFMApp(App):
 
     BINDINGS = [
         Binding("n", "next", "Next"),
+        Binding("p", "prev", "Previous"),
         Binding("q", "quit", "Quit"),
         Binding("z", "quiz", "Quiz"),
         Binding("a", "a", "A"),
@@ -166,6 +167,11 @@ class RTFMApp(App):
             return
         if self.idx < len(self.sections) - 1:
             self.idx += 1
+            self.show(self.idx)
+
+    def action_prev(self) -> None:
+        if not self.quiz_mode and self.idx > 0:
+            self.idx -= 1
             self.show(self.idx)
 
 
