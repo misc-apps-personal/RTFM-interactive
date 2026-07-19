@@ -1,10 +1,10 @@
 """Load documents from file paths or URLs. Converts HTML to markdown via LLM.
 
-PLACEHOLDER: Uses DeepSeek API for conversion. Should be replaced with a
-proper HTML-to-markdown parser when the naive approach becomes a bottleneck.
+PLACEHOLDER: Uses OpenRouter (inclusionai/ling-2.6-flash) for conversion. Should be
+replaced with a proper HTML-to-markdown parser when the naive approach
+becomes a bottleneck.
 """
 
-import json
 import os
 import re
 from pathlib import Path
@@ -40,25 +40,27 @@ def _is_html(text: str) -> bool:
 
 
 def _html_to_md(html: str) -> str:
-    """Send HTML to DeepSeek and return clean markdown."""
-    api_key = os.environ.get("DEEPSEEK_API_KEY")
+    """Send HTML to OpenRouter (tencent/hy3:free) and return clean markdown."""
+    api_key = os.environ.get("OPENROUTER_API_KEY")
     if not api_key:
-        raise RuntimeError("DEEPSEEK_API_KEY not set. Add DEEPSEEK_API_KEY=your_key to .env or export it.")
-
-    # Send the full HTML; the LLM handles token limits.
+        raise RuntimeError("OPENROUTER_API_KEY not set. Add OPENROUTER_API_KEY=your_key to .env or export it.")
 
     resp = httpx.post(
-        "https://api.deepseek.com/v1/chat/completions",
-        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+        "https://openrouter.ai/api/v1/chat/completions",
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://github.com/RTFM-interactive",
+        },
         json={
-            "model": "deepseek-chat",
+            "model": "inclusionai/ling-2.6-flash",
             "messages": [
                 {"role": "system", "content": "Convert the following HTML documentation page to clean, well-structured Markdown. Preserve all meaningful content, headings, lists, code blocks, and links. Output only the Markdown, no commentary."},
                 {"role": "user", "content": html},
             ],
             "temperature": 0.1,
         },
-        timeout=60,
+        timeout=120,
     )
     resp.raise_for_status()
     return resp.json()["choices"][0]["message"]["content"]
