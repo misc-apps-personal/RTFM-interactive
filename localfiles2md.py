@@ -1,4 +1,4 @@
-"""Load documents from URLs. Converts HTML to markdown via LLM.
+"""Load documents from local file paths. Converts HTML to markdown via LLM.
 
 PLACEHOLDER: Uses OpenRouter (inclusionai/ling-2.6-flash) for conversion. Should be
 replaced with a proper HTML-to-markdown parser when the naive approach
@@ -24,15 +24,6 @@ def _load_env():
 
 
 _load_env()
-
-
-def _resolve_github_wiki(url: str) -> str:
-    """Convert a GitHub wiki URL to its raw markdown URL."""
-    m = re.match(r"https?://github\.com/([^/]+)/([^/]+)/wiki/([^#]+)(#.*)?$", url)
-    if m:
-        owner, repo, page, anchor = m.group(1), m.group(2), m.group(3).rstrip("/"), m.group(4) or ""
-        return f"https://raw.githubusercontent.com/wiki/{owner}/{repo}/{page}.md{anchor}"
-    return url
 
 
 def _is_html(text: str) -> bool:
@@ -66,18 +57,20 @@ def _html_to_md(html: str) -> str:
     return resp.json()["choices"][0]["message"]["content"]
 
 
-def load(url: str) -> str:
-    """Fetch a URL and convert to markdown if the response is HTML.
+def load(source: str) -> str:
+    """Load text from a local file path (plain path or file:// URI). Converts HTML to markdown if needed.
 
-    Strips any #fragment from the URL before fetching.
+    Strips any #fragment from the path before reading.
     """
-    fragment = None
-    if "#" in url:
-        url, fragment = url.split("#", 1)
+    # Strip fragment
+    if "#" in source:
+        source = source.split("#", 1)[0]
 
-    resp = httpx.get(_resolve_github_wiki(url), follow_redirects=True, timeout=30)
-    resp.raise_for_status()
-    text = resp.text
+    # Handle file:// URIs
+    if source.startswith("file://"):
+        source = source[7:]
+
+    text = Path(source).read_text(encoding="utf-8")
     if _is_html(text):
         text = _html_to_md(text)
     return text

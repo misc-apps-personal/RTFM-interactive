@@ -10,7 +10,8 @@ from textual.widgets import Static
 from textual.binding import Binding
 
 import quiz
-from html2md import load
+from html2md import load as load_url
+from localfiles2md import load as load_local
 
 
 def _md_links_to_textual(text: str, base_url: str | None = None) -> str:
@@ -82,7 +83,10 @@ class RTFMApp(App):
         )
 
     def on_mount(self) -> None:
-        text = load(self.source)
+        if self.source.startswith(("http://", "https://")):
+            text = load_url(self.source)
+        else:
+            text = load_local(self.source)
         self.sections = parse_sections(text)
         if self.sections:
             self.show(self.idx)
