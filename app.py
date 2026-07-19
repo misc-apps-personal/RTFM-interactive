@@ -2,10 +2,8 @@
 
 import re
 import sys
-from pathlib import Path
 from urllib.parse import urljoin
 
-import httpx
 from textual.app import App, ComposeResult
 from textual.containers import VerticalScroll, Container
 from textual.widgets import Static
