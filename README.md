@@ -1,6 +1,6 @@
 # RTFM-interactive
 
-LLM-powered TUI app that helps the user interactively read the fucking manual. An educational tool for learning a new library from its documentations. 
+LLM-powered TUI app that helps the user interactively "Read The Fucking Manual". An educational tool for learning a new library from its documentations. 
 
 - section-by-section reading with navigation
 - LLM-generated multiple-choice quiz per section (DeepSeek)
