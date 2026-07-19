@@ -1,2 +1,3 @@
 .env
 rtfm_interactive.egg-info/
+__pycache__/
