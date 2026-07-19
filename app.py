@@ -10,6 +10,8 @@ from textual.containers import VerticalScroll, Container
 from textual.widgets import Static
 from textual.binding import Binding
 
+import quiz
+
 
 def _resolve_github_wiki(url: str) -> str:
     """Convert a GitHub wiki URL to its raw markdown URL."""
@@ -50,8 +52,13 @@ class RTFMApp(App):
     """
 
     BINDINGS = [
-        Binding("n", "next", "Next section"),
+        Binding("n", "next", "Next"),
         Binding("q", "quit", "Quit"),
+        Binding("z", "quiz", "Quiz"),
+        Binding("a", "a", "A"),
+        Binding("b", "b", "B"),
+        Binding("c", "c", "C"),
+        Binding("d", "d", "D"),
     ]
 
     def __init__(self, source: str):
@@ -59,6 +66,10 @@ class RTFMApp(App):
         self.source = source
         self.sections = []
         self.idx = 0
+        self.quiz_mode = False
+        self.quiz_questions = []
+        self.quiz_idx = 0
+        self.quiz_answered = False
 
     def compose(self) -> ComposeResult:
         yield Container(
@@ -79,7 +90,80 @@ class RTFMApp(App):
         self.query_one(VerticalScroll).scroll_home(animate=False)
         self.query_one("#counter", Static).update(f"{i+1}/{len(self.sections)}")
 
+    def _render_quiz(self) -> None:
+        q = self.quiz_questions[self.quiz_idx]
+        lines = [f"[bold]Quiz ({self.quiz_idx+1}/{len(self.quiz_questions)})[/bold]"]
+        lines.append("")
+        lines.append(q["question"])
+        lines.append("")
+        for letter in ["A", "B", "C", "D"]:
+            if letter in q.get("choices", {}):
+                prefix = ">" if self.quiz_answered else " "
+                lines.append(f"  {prefix} {letter}) {q['choices'][letter]}")
+        if self.quiz_answered:
+            correct = q["answer"]
+            lines.append("")
+            if self.quiz_correct:
+                lines.append("[green]Correct![/green]")
+            else:
+                lines.append(f"[red]Incorrect.[/red] Correct answer: {correct})")
+            lines.append("")
+            lines.append("Press [bold]n[/bold] for next question, [bold]z[/bold] to exit quiz")
+        else:
+            lines.append("")
+            lines.append("Press [bold]a[/bold], [bold]b[/bold], [bold]c[/bold], or [bold]d[/bold] to answer")
+        self.query_one("#view", Static).update("\n".join(lines))
+        self.query_one("#counter", Static).update(f"{self.idx+1}/{len(self.sections)}")
+
+    def action_quiz(self) -> None:
+        if not self.sections:
+            return
+        if self.quiz_mode:
+            self.quiz_mode = False
+            self.show(self.idx)
+            return
+        self.notify("Generating quiz from current section...")
+        try:
+            s = self.sections[self.idx]
+            self.quiz_questions = quiz.generate_quiz(f"# {s['title']}\n\n{s['body']}")
+            self.quiz_mode = True
+            self.quiz_idx = 0
+            self.quiz_answered = False
+            self.quiz_correct = False
+            self._render_quiz()
+        except Exception as e:
+            self.notify(f"Quiz error: {e}", severity="error")
+
+    def _answer_quiz(self, letter: str) -> None:
+        if not self.quiz_mode or self.quiz_answered:
+            return
+        q = self.quiz_questions[self.quiz_idx]
+        self.quiz_correct = letter.upper() == q["answer"]
+        self.quiz_answered = True
+        self._render_quiz()
+
+    def action_a(self) -> None:
+        self._answer_quiz("A")
+
+    def action_b(self) -> None:
+        self._answer_quiz("B")
+
+    def action_c(self) -> None:
+        self._answer_quiz("C")
+
+    def action_d(self) -> None:
+        self._answer_quiz("D")
+
     def action_next(self) -> None:
+        if self.quiz_mode and self.quiz_answered:
+            if self.quiz_idx < len(self.quiz_questions) - 1:
+                self.quiz_idx += 1
+                self.quiz_answered = False
+                self._render_quiz()
+            else:
+                self.quiz_mode = False
+                self.show(self.idx)
+            return
         if self.idx < len(self.sections) - 1:
             self.idx += 1
             self.show(self.idx)

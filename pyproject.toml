@@ -12,7 +12,7 @@ dependencies = [
 rtfm = "app:main"
 
 [tool.setuptools]
-py-modules = ["app"]
+py-modules = ["app", "quiz"]
 
 [build-system]
 requires = ["setuptools>=68.0"]
