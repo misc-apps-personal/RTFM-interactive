@@ -15,7 +15,7 @@ from html2md import load
 
 def _md_links_to_textual(text: str, base_url: str | None = None) -> str:
     """Convert markdown links:
-    - Absolute URLs → [link=url]text[/link] (clickable)
+    - Absolute URLs → [text](url) (Textual clickable link)
     - Relative URLs → resolved against base_url, then clickable
     - Anchor-only links (#foo) → just text
     """
@@ -27,7 +27,7 @@ def _md_links_to_textual(text: str, base_url: str | None = None) -> str:
         if not url.startswith(("http://", "https://")) and base_url:
             url = urljoin(base_url, url)
         if url.startswith(("http://", "https://")):
-            return f"[link={url}]{text_label}[/link]"
+            return f"[{text_label}]({url})"
         return text_label
 
     return re.sub(r"\[([^\]]+)\]\(([^)]+)\)", _replace, text)

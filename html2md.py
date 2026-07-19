@@ -45,8 +45,7 @@ def _html_to_md(html: str) -> str:
     if not api_key:
         raise RuntimeError("DEEPSEEK_API_KEY not set. Add DEEPSEEK_API_KEY=your_key to .env or export it.")
 
-    # Trim very large pages to avoid token limits
-    html = html[:80000]
+    # Send the full HTML; the LLM handles token limits.
 
     resp = httpx.post(
         "https://api.deepseek.com/v1/chat/completions",
