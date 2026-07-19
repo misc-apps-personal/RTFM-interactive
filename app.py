@@ -6,7 +6,7 @@ from pathlib import Path
 
 import httpx
 from textual.app import App, ComposeResult
-from textual.containers import VerticalScroll
+from textual.containers import VerticalScroll, Container
 from textual.widgets import Static
 from textual.binding import Binding
 
@@ -43,6 +43,12 @@ def parse_sections(text: str) -> list[dict]:
 
 
 class RTFMApp(App):
+    CSS = """
+    #layout { height: 100%; padding: 1 2; }
+    #scroll { height: 1fr; }
+    #counter { height: 1; text-align: center; }
+    """
+
     BINDINGS = [
         Binding("n", "next", "Next section"),
         Binding("q", "quit", "Quit"),
@@ -55,7 +61,11 @@ class RTFMApp(App):
         self.idx = 0
 
     def compose(self) -> ComposeResult:
-        yield VerticalScroll(Static("Loading...", id="view"))
+        yield Container(
+            VerticalScroll(Static("Loading...", id="view"), id="scroll"),
+            Static("", id="counter"),
+            id="layout",
+        )
 
     def on_mount(self) -> None:
         text = load(self.source)
@@ -67,6 +77,7 @@ class RTFMApp(App):
         s = self.sections[i]
         self.query_one("#view", Static).update(f"[bold]{s['title']}[/bold]\n\n{s['body']}")
         self.query_one(VerticalScroll).scroll_home(animate=False)
+        self.query_one("#counter", Static).update(f"{i+1}/{len(self.sections)}")
 
     def action_next(self) -> None:
         if self.idx < len(self.sections) - 1:
