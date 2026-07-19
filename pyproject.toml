@@ -1,0 +1,19 @@
+[project]
+name = "rtfm-interactive"
+version = "0.1.0"
+description = "LLM-powered TUI app for reading manuals interactively"
+requires-python = ">=3.10"
+dependencies = [
+    "textual>=1.0.0",
+    "httpx>=0.27.0",
+]
+
+[project.scripts]
+rtfm = "app:main"
+
+[tool.setuptools]
+py-modules = ["app"]
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
