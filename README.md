@@ -24,4 +24,4 @@ alias rtfm='cd ~/Documents/vibecoding/RTFM-interactive && source .venv/bin/activ
 | `a` `b` `c` `d` | Answer quiz question |
 | `q` | Quit |
 
-Requires `DEEPSEEK_API_KEY` environment variable for quiz generation.
+Requires `DEEPSEEK_API_KEY=your_key` in a `.env` file in the project root for quiz generation.

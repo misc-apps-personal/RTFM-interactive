@@ -2,6 +2,8 @@
 
 import json
 import os
+from pathlib import Path
+
 import httpx
 
 
@@ -17,10 +19,24 @@ Return a JSON array of objects. Each object has:
 Generate exactly 3 questions. Only return valid JSON, no other text."""
 
 
+def _load_env():
+    """Load .env file from project root, if it exists."""
+    env_path = Path(__file__).resolve().parent / ".env"
+    if env_path.exists():
+        for line in env_path.read_text().splitlines():
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                k, v = line.split("=", 1)
+                os.environ.setdefault(k.strip(), v.strip())
+
+
+_load_env()
+
+
 def _call_api(text: str) -> str:
     api_key = os.environ.get("DEEPSEEK_API_KEY")
     if not api_key:
-        raise RuntimeError("DEEPSEEK_API_KEY not set")
+        raise RuntimeError("DEEPSEEK_API_KEY not set. Add DEEPSEEK_API_KEY=your_key to .env or export it.")
 
     resp = httpx.post(
         API_URL,
