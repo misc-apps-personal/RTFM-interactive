@@ -9,7 +9,7 @@ LLM-powered TUI app that helps the user interactively "Read The Fucking Manual".
 
 ```
 rtfm path/to/manual.md
-rtfm https://example.com/docs.md
+rtfm https://example.com/docs.html
 ```
 
 after adding the following to `~/.bashrc`: 

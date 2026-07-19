@@ -3,6 +3,7 @@
 import re
 import sys
 from pathlib import Path
+from urllib.parse import urljoin
 
 import httpx
 from textual.app import App, ComposeResult
@@ -11,24 +12,27 @@ from textual.widgets import Static
 from textual.binding import Binding
 
 import quiz
+from html2md import load
 
 
-def _resolve_github_wiki(url: str) -> str:
-    """Convert a GitHub wiki URL to its raw markdown URL."""
-    m = re.match(r"https?://github\.com/([^/]+)/([^/]+)/wiki/([^#]+)(#.*)?$", url)
-    if m:
-        owner, repo, page, anchor = m.group(1), m.group(2), m.group(3).rstrip("/"), m.group(4) or ""
-        return f"https://raw.githubusercontent.com/wiki/{owner}/{repo}/{page}.md{anchor}"
-    return url
+def _md_links_to_textual(text: str, base_url: str | None = None) -> str:
+    """Convert markdown links:
+    - Absolute URLs → [link=url]text[/link] (clickable)
+    - Relative URLs → resolved against base_url, then clickable
+    - Anchor-only links (#foo) → just text
+    """
+    def _replace(m: re.Match) -> str:
+        text_label = m.group(1)
+        url = m.group(2)
+        if url.startswith("#"):
+            return text_label
+        if not url.startswith(("http://", "https://")) and base_url:
+            url = urljoin(base_url, url)
+        if url.startswith(("http://", "https://")):
+            return f"[link={url}]{text_label}[/link]"
+        return text_label
 
-
-def load(source: str) -> str:
-    """Load text from a file path or URL."""
-    if source.startswith(("http://", "https://")):
-        resp = httpx.get(_resolve_github_wiki(source), follow_redirects=True, timeout=30)
-        resp.raise_for_status()
-        return resp.text
-    return Path(source).read_text(encoding="utf-8")
+    return re.sub(r"\[([^\]]+)\]\(([^)]+)\)", _replace, text)
 
 
 def parse_sections(text: str) -> list[dict]:
@@ -87,7 +91,10 @@ class RTFMApp(App):
 
     def show(self, i: int) -> None:
         s = self.sections[i]
-        self.query_one("#view", Static).update(f"[bold]{s['title']}[/bold]\n\n{s['body']}")
+        base = self.source if self.source.startswith(("http://", "https://")) else None
+        title = _md_links_to_textual(s['title'], base)
+        body = _md_links_to_textual(s['body'], base)
+        self.query_one("#view", Static).update(f"[bold]{title}[/bold]\n\n{body}")
         self.query_one(VerticalScroll).scroll_home(animate=False)
         self.query_one("#counter", Static).update(f"{i+1}/{len(self.sections)}")
 
