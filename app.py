@@ -11,10 +11,19 @@ from textual.widgets import Static
 from textual.binding import Binding
 
 
+def _resolve_github_wiki(url: str) -> str:
+    """Convert a GitHub wiki URL to its raw markdown URL."""
+    m = re.match(r"https?://github\.com/([^/]+)/([^/]+)/wiki/([^#]+)(#.*)?$", url)
+    if m:
+        owner, repo, page, anchor = m.group(1), m.group(2), m.group(3).rstrip("/"), m.group(4) or ""
+        return f"https://raw.githubusercontent.com/wiki/{owner}/{repo}/{page}.md{anchor}"
+    return url
+
+
 def load(source: str) -> str:
     """Load text from a file path or URL."""
     if source.startswith(("http://", "https://")):
-        resp = httpx.get(source, follow_redirects=True, timeout=30)
+        resp = httpx.get(_resolve_github_wiki(source), follow_redirects=True, timeout=30)
         resp.raise_for_status()
         return resp.text
     return Path(source).read_text(encoding="utf-8")

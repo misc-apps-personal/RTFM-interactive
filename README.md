@@ -12,4 +12,9 @@ rtfm path/to/manual.md
 rtfm https://example.com/docs.md
 ```
 
+after adding the following to `~/.bashrc`: 
+```
+alias rtfm='cd ~/Documents/vibecoding/RTFM-interactive && source .venv/bin/activate && python3 app.py'
+```
+
 Keys: `n` next section, `q` quit.
